@@ -1,11 +1,11 @@
 from models import Base, User,Category,Item
-from flask import Flask, jsonify, request, url_for, abort, g, render_template,redirect
+from flask import Flask, jsonify, request, url_for, abort, g, render_template,redirect,flash
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine,desc
-
 from flask.ext.httpauth import HTTPBasicAuth
 import json
+import random, string
 
 #NEW IMPORTS
 from oauth2client.client import flow_from_clientsecrets
@@ -135,26 +135,34 @@ def categoryDisplay(categoryName):
         return redirect(url_for('default'))
     else:
         ## error
+        flash(u'Error retreiving category','danger')
         return redirect(url_for('default'))
 
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
-    cat = showCategory(categoryName)
     if request.method == 'POST':
-        try:
-            name = request.form["name"]
-            description = request.form["description"]
-            categoryName = request.form["categoryName"]
-            if name and description and categoryName:
-            # Success flash
-                newItem(name,description,categoryName)
-                return redirect(url_for('categoryDisplay',categoryName=categoryName))
-            else:
-                # Failed flash
-                return redirect(url_for('newCategoryItem',categoryName=categoryName))
-        except:
+        # try:
+        name = request.form["name"]
+        description = request.form["description"]
+        print categoryName
+        if 'categoryName' in request.form:
+            catName = request.form["categoryName"]
+        else:
+            catName = categoryName
+        print catName
+        if name and description and catName:
+        # Success flash
+            newItem(name,description,catName)
+            flash(u'Success! item Created successfuly','success')
+            return redirect(url_for('categoryDisplay',categoryName=catName))
+        else:
             # Failed flash
-            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            flash(u'Error One of the fields is empty, please try again!','danger')
+            return redirect(url_for('newCategoryItem',categoryName=catName))
+        # except:
+        #     # Failed flash
+        #     flash('Server Error, please try again later','danger')
+        #     return redirect(url_for('categoryDisplay',categoryName=categoryName))
     else:
         return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
@@ -164,14 +172,17 @@ def newCategory():
         try:
             name = request.form["name"]
             if name:
-            # Success flash
+                # Success flash
+                flash(u'Success!, Category created successfuly','success')
                 addCategory(name)
                 return redirect(url_for('default'))
             else:
                 # Failed flash
+                flash(u'Error creating category, please try again later','danger')
                 return render_template('new_category.html')
         except:
             # Failed flash
+            flash(u'Server Error, please try again later','danger')
             return render_template('new_category.html')
     else:
         return render_template('new_category.html')
@@ -189,9 +200,11 @@ def categoryItemEdit(categoryName,itemName):
         try:
             it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
             # Success flash
+            flash(u'Success!, item created successfuly','success')
             return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
         except:
             # error flash
+            flash(u'Error creating item, please try again later','danger')
             return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
     else:
         return render_template('category_item_edit.html',item=it,categories=showCategories())
@@ -209,9 +222,11 @@ def categoryItemDeleteConfirm(categoryName,itemName):
         try:
             it = deleteItem(it)
             # Success flash
+            flash(u'Success!, item deleted successfuly','success')
             return redirect(url_for('categoryDisplay',categoryName=categoryName))
         except:
             # error flash
+            flash(u'Server Error, please try again later','danger')
             return redirect(url_for('categoryDisplay',categoryName=categoryName))
 
 @app.route('/oauth/<provider>', methods = ['POST'])
@@ -340,5 +355,5 @@ def get_resource():
 
 if __name__ == '__main__':
     app.debug = True
-    #app.config['SECRET_KEY'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    app.config['SECRET_KEY'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
     app.run(host='0.0.0.0', port=5000)
