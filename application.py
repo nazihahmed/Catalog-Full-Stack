@@ -68,25 +68,34 @@ def showItem(categoryName,itemName):
     return item
 
 def newItem(name,description,category_id):
-    category = session.query(Category).filter_by(id=category_id).first()
-    new_item = Item(name=name,description=description,category=category)
-    session.add(new_item)
-    session.commit()
-    return new_item
+    try:
+        category = session.query(Category).filter_by(id=category_id).first()
+        new_item = Item(name=name,description=description,category=category)
+        session.add(new_item)
+        session.commit()
+        return True
+    except:
+        return False
 
-def editItem(item,name,description):
-    item['name'] = name
-    item['description'] = description
-    session.add(item)
-    session.commit()
-    return item
+def editItem(item,name,description,categoryName):
+    try:
+        item.name = name
+        item.description = description
+        category = showCategory(categoryName)
+        item.category = category
+        session.add(item)
+        session.commit()
+        return item
+    except:
+        return False
 
-def deleteItem(item_id):
-    item = session.query(Item).filter_by(id=item_id).first()
-    session.delete(item)
-    session.commit()
-    return item
-
+def deleteItem(item):
+    try:
+        session.delete(item)
+        session.commit()
+        return True
+    except:
+        return False
 
 
 @auth.verify_password
@@ -139,10 +148,13 @@ def categoryItem(categoryName,itemName):
 def categoryItemEdit(categoryName,itemName):
     it = showItem(categoryName,itemName)
     if request.method == 'POST':
-        editItem(it,request.form["name"],request.form["description"])
-        return redirect
+        try:
+            it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
+            return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
+        except:
+            return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
     else:
-        return render_template('category_item_edit.html',item=it)
+        return render_template('category_item_edit.html',item=it,categories=showCategories())
 
 @app.route('/catalog/<categoryName>/<itemName>/delete')
 #@auth.login_required
