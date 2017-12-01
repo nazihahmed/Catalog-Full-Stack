@@ -135,13 +135,10 @@ def newCat():
     else:
         return redirect('/')
 
-@app.route('/catalog/<categoryName>/<itemName>', methods = ['GET','POST'])
+@app.route('/catalog/<categoryName>/<itemName>')
 def categoryItem(categoryName,itemName):
     it = showItem(categoryName,itemName)
-    if request.method == 'POST':
-        return render_template('category_item.html',item=it)
-    else:
-        return render_template('category_item.html',item=it)
+    return render_template('category_item.html',item=it)
 
 @app.route('/catalog/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
 #@auth.login_required
@@ -150,8 +147,10 @@ def categoryItemEdit(categoryName,itemName):
     if request.method == 'POST':
         try:
             it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
+            # Success flash
             return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
         except:
+            # error flash
             return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
     else:
         return render_template('category_item_edit.html',item=it,categories=showCategories())
@@ -159,11 +158,20 @@ def categoryItemEdit(categoryName,itemName):
 @app.route('/catalog/<categoryName>/<itemName>/delete')
 #@auth.login_required
 def categoryItemDelete(categoryName,itemName):
-    if request.method == 'POST':
-        return render_template('category_item.html',category=category,item=item)
-    else:
         it = showItem(categoryName,itemName)
         return render_template('category_item_delete.html',item=it)
+
+@app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
+#@auth.login_required
+def categoryItemDeleteConfirm(categoryName,itemName):
+        it = showItem(categoryName,itemName)
+        try:
+            it = deleteItem(it)
+            # Success flash
+            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+        except:
+            # error flash
+            return redirect(url_for('categoryDisplay',categoryName=categoryName))
 
 @app.route('/oauth/<provider>', methods = ['POST'])
 def login(provider):

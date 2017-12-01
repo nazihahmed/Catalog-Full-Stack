@@ -23,7 +23,8 @@
         <div class="jumbotron">
           <h1 class="display-5">Are you sure you want to delete {{item.name}}?</h1>
           <p class="lead">
-            <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemEdit',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
+            <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemDeleteConfirm',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
+            <a class="btn btn-lg" href="{{url_for('categoryItem',categoryName=item.category.name,itemName=item.name)}}">Cancel</a>
           </p>
         </div>
       </div>
