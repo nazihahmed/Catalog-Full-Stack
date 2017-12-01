@@ -200,7 +200,7 @@ def categoryItemEdit(categoryName,itemName):
         try:
             it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
             # Success flash
-            flash(u'Success!, item created successfuly','success')
+            flash(u'Success!, item saved successfuly','success')
             return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
         except:
             # error flash
