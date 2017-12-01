@@ -59,11 +59,11 @@ def addCategory(name):
 
 def showItems(category_id,limit):
     if category_id:
-        items = session.query(Item).filter_by(category_id = category_id).all()
+        items = session.query(Item).order_by(desc(Item.id)).filter_by(category_id = category_id).all()
     elif limit:
         items = session.query(Item).order_by(desc(Item.id)).limit(limit)
     else:
-        items = session.query(Item).all()
+        items = session.query(Item).order_by(desc(Item.id)).all()
     return items
 
 def showItem(categoryName,itemName):
