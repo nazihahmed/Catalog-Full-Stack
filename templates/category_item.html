@@ -22,7 +22,7 @@
       <div class="jumbotron">
         <div class="jumbotron">
           <h1 class="display-4">{{item.name}}</h1>
-          <p class="lead">Category: {{item.category.name}}</p>
+          <p class="lead">Category: <a href="{{url_for('categoryDisplay',categoryName=item.category.name)}}">{{item.category.name}}</a></p>
           <hr class="my-4">
           <p>{{item.description}}</p>
           <p class="lead">

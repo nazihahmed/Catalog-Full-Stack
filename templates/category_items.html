@@ -19,6 +19,10 @@
           </li>
         </ul>
       </nav>
+      <div class="jumbotron">
+        <h1 class="display-4">{{category.name}}</h1>
+        <a class="btn btn-primary btn-lg" href="{{url_for('newCategoryItem',categoryName=category.name)}}" role="button">New Item</a>
+      </div>
       {% for item in items %}
       <div class="jumbotron">
         <h1 class="display-4">{{item.name}}</h1>

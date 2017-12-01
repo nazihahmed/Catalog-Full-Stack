@@ -2,7 +2,7 @@ from models import Base, User,Category,Item
 from flask import Flask, jsonify, request, url_for, abort, g, render_template,redirect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine,desc
 
 from flask.ext.httpauth import HTTPBasicAuth
 import json
@@ -61,7 +61,7 @@ def showItems(category_id,limit):
     if category_id:
         items = session.query(Item).filter_by(category_id = category_id).all()
     elif limit:
-        items = session.query(Item).limit(limit)
+        items = session.query(Item).order_by(desc(Item.id)).limit(limit)
     else:
         items = session.query(Item).all()
     return items
@@ -71,9 +71,9 @@ def showItem(categoryName,itemName):
     item = session.query(Item).filter_by(name=itemName,category_id=category_id).first()
     return item
 
-def newItem(name,description,category_id):
+def newItem(name,description,categoryName):
     try:
-        category = session.query(Category).filter_by(id=category_id).first()
+        category = showCategory(categoryName)
         new_item = Item(name=name,description=description,category=category)
         session.add(new_item)
         session.commit()
@@ -129,29 +129,45 @@ def start():
 def categoryDisplay(categoryName):
     cat = showCategory(categoryName)
     items = showItems(cat.id,None)
-    return render_template('category_items.html',items=items)
+    return render_template('category_items.html',items=items,category=cat)
 
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     cat = showCategory(categoryName)
     items = showItems(cat.id,None)
-    return render_template('new_item.html')
+    if request.method == 'POST':
+        try:
+            name = request.form["name"]
+            description = request.form["description"]
+            categoryName = request.form["categoryName"]
+            if name and description and categoryName:
+            # Success flash
+                newItem(name,description,categoryName)
+                return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            else:
+                # Failed flash
+                return redirect(url_for('newCategoryItem',categoryName=categoryName))
+        except:
+            # Failed flash
+            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+    else:
+        return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
 @app.route('/catalog/new', methods = ['GET','POST'])
 def newCategory():
     if request.method == 'POST':
-        # try:
-        name = request.form["name"]
-        if name:
-        # Success flash
-            addCategory(name)
-            return redirect(url_for('default'))
-        else:
+        try:
+            name = request.form["name"]
+            if name:
+            # Success flash
+                addCategory(name)
+                return redirect(url_for('default'))
+            else:
+                # Failed flash
+                return render_template('new_category.html')
+        except:
             # Failed flash
             return render_template('new_category.html')
-        # except:
-        #     # Failed flash
-        #     return render_template('new_category.html')
     else:
         return render_template('new_category.html')
 
