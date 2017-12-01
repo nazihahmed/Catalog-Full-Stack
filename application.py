@@ -127,9 +127,15 @@ def start():
 
 @app.route('/catalog/<categoryName>')
 def categoryDisplay(categoryName):
-    cat = showCategory(categoryName)
-    items = showItems(cat.id,None)
-    return render_template('category_items.html',items=items,category=cat)
+    if categoryName!='default':
+        cat = showCategory(categoryName)
+        items = showItems(cat.id,None)
+        return render_template('category_items.html',items=items,category=cat)
+    elif categoryName=='default':
+        return redirect(url_for('default'))
+    else:
+        ## error
+        return redirect(url_for('default'))
 
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
