@@ -48,10 +48,14 @@ def showCategory(name):
     category = session.query(Category).filter_by(name=name).first()
     return category
 
-def newCategory(name):
-    new_category = Category(name=name)
-    session.add(new_category)
-    session.commit()
+def addCategory(name):
+    try:
+        new_category = Category(name=name)
+        session.add(new_category)
+        session.commit()
+        return True
+    except:
+        return False
 
 def showItems(category_id,limit):
     if category_id:
@@ -127,13 +131,29 @@ def categoryDisplay(categoryName):
     items = showItems(cat.id,None)
     return render_template('category_items.html',items=items)
 
+@app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
+def newCategoryItem(categoryName):
+    cat = showCategory(categoryName)
+    items = showItems(cat.id,None)
+    return render_template('new_item.html')
+
 @app.route('/catalog/new', methods = ['GET','POST'])
-def newCat():
+def newCategory():
     if request.method == 'POST':
-        newcat = newCategory(name=request.form["name"])
-        return redirect('/')
+        # try:
+        name = request.form["name"]
+        if name:
+        # Success flash
+            addCategory(name)
+            return redirect(url_for('default'))
+        else:
+            # Failed flash
+            return render_template('new_category.html')
+        # except:
+        #     # Failed flash
+        #     return render_template('new_category.html')
     else:
-        return redirect('/')
+        return render_template('new_category.html')
 
 @app.route('/catalog/<categoryName>/<itemName>')
 def categoryItem(categoryName,itemName):

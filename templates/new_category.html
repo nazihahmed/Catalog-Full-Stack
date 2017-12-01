@@ -15,23 +15,21 @@
         <a class="navbar-brand" href="/">Catalog App</a>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <a class="nav-link" href="#">Login</a>
+            <a class="nav-link" href="#">Logout</a>
           </li>
         </ul>
       </nav>
-      <div class="row jumbotron">
-        <div class="col-lg-4 col-xs-12 categories">
-          <h2>Categories</h2><a class="btn btn-primary btn-sm" href="{{url_for('newCategory')}}" role="button">New Category</a><br>
-          {% for category in categories %}
-          <a href="{{url_for('categoryDisplay',categoryName=category.name)}}">{{category.name}}</a><br>
-          {% endfor %}
-        </div>
-
-        <div class="col-lg-8 col-xs-12">
-          <h2>Latest Items</h2>
-          {% for item in items %}
-          <a href="{{url_for('categoryItem',categoryName=item.category.name,itemName=item.name)}}">{{item.name}}</a><br>
-          {% endfor %}
+      <div class="jumbotron">
+        <div class="jumbotron">
+          <h1 class="display-4">New Category</h1>
+          <form action="{{url_for('newCategory')}}" method="POST">
+            <div class="form-group">
+              <label for="itemName">Name</label>
+              <input type="text" class="form-control" name="name" id="itemName" aria-describedby="itemName" placeholder="Enter Name">
+            </div>
+            <button type="submit" class="btn btn-primary">Add</button>
+            <a href="/">Cancel</a>
+          </form>
         </div>
       </div>
     </div>
