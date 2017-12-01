@@ -1,3 +1,13 @@
 * {
   box-sizing: border-box;
 }
+
+.jumbotron {
+  width: 100%;
+  margin: 0 auto;
+  margin-top: 2em;
+}
+
+.categories {
+  border-right: 1px solid gray;
+}

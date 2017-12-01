@@ -1,5 +1,5 @@
 from models import Base, User,Category,Item
-from flask import Flask, jsonify, request, url_for, abort, g, render_template
+from flask import Flask, jsonify, request, url_for, abort, g, render_template,redirect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
@@ -53,12 +53,18 @@ def newCategory(name):
     session.add(new_category)
     session.commit()
 
-def showItems(category_id):
-    items = session.query(Item).filter_by(category_id = category_id).all()
-    return category
+def showItems(category_id,limit):
+    if category_id:
+        items = session.query(Item).filter_by(category_id = category_id).all()
+    elif limit:
+        items = session.query(Item).limit(limit)
+    else:
+        items = session.query(Item).all()
+    return items
 
-def showItem(name):
-    item = session.query(Item).filter_by(name=name).first()
+def showItem(categoryName,itemName):
+    category_id = showCategory(categoryName).id
+    item = session.query(Item).filter_by(name=itemName,category_id=category_id).first()
     return item
 
 def newItem(name,description,category_id):
@@ -68,8 +74,7 @@ def newItem(name,description,category_id):
     session.commit()
     return new_item
 
-def editItem(item_id,name,description):
-    item = session.query(Item).filter_by(id=item_id).first()
+def editItem(item,name,description):
     item['name'] = name
     item['description'] = description
     session.add(item)
@@ -100,7 +105,8 @@ def verify_password(username_or_token, password):
 @app.route('/')
 def default():
     categories = showCategories()
-    return render_template('catalog.html',categories = categories)
+    items = showItems(None,10)
+    return render_template('catalog.html',categories = categories, items=items)
 
 @app.route('/clientOAuth')
 def start():
@@ -109,7 +115,7 @@ def start():
 @app.route('/catalog/<categoryName>')
 def categoryDisplay(categoryName):
     cat = showCategory(categoryName)
-    items = showItems(cat.id)
+    items = showItems(cat.id,None)
     return render_template('category_items.html',items=items)
 
 @app.route('/catalog/new', methods = ['GET','POST'])
@@ -120,28 +126,32 @@ def newCat():
     else:
         return redirect('/')
 
-@app.route('/catalog/<category>/<item>', methods = ['GET','POST'])
-def categoryitem(category,item):
+@app.route('/catalog/<categoryName>/<itemName>', methods = ['GET','POST'])
+def categoryItem(categoryName,itemName):
+    it = showItem(categoryName,itemName)
     if request.method == 'POST':
-        return render_template('category_item.html',category=category,item=item)
+        return render_template('category_item.html',item=it)
     else:
-        return render_template('category_item.html',category=category,item=item)
+        return render_template('category_item.html',item=it)
 
-@app.route('/catalog/<category>/<item>/edit', methods = ['GET','POST'])
-@auth.login_required
-def categoryitemedit(category,item):
+@app.route('/catalog/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
+#@auth.login_required
+def categoryItemEdit(categoryName,itemName):
+    it = showItem(categoryName,itemName)
     if request.method == 'POST':
-        return render_template('category_item.html',category=category,item=item)
+        editItem(it,request.form["name"],request.form["description"])
+        return redirect
     else:
-        return render_template('category_item_edit.html',category=category,item=item)
+        return render_template('category_item_edit.html',item=it)
 
-@app.route('/catalog/<category>/<item>/delete')
-@auth.login_required
-def categoryitemdelete(category,item):
+@app.route('/catalog/<categoryName>/<itemName>/delete')
+#@auth.login_required
+def categoryItemDelete(categoryName,itemName):
     if request.method == 'POST':
         return render_template('category_item.html',category=category,item=item)
     else:
-        return render_template('category_item_delete.html',category=category,item=item)
+        it = showItem(categoryName,itemName)
+        return render_template('category_item_delete.html',item=it)
 
 @app.route('/oauth/<provider>', methods = ['POST'])
 def login(provider):
