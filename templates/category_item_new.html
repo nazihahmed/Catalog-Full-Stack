@@ -33,16 +33,15 @@
               <textarea class="form-control" name="description" id="desc" aria-describedby="itemDescription" placeholder="Enter Description"></textarea>
             </div>
             {% if categoryName == 'default' %}
-              {% for category in categories %}
-              <div class="form-check">
-                <label class="form-check-label">
-                  <input class="form-check-input" type="radio" name="categoryName" value="{{category.name}}" {% if category.name == categoryName %}checked{%endif%}>
-                  {{category.name}}
-                </label>
-              </div>
-              {% endfor %}
+              <label class="mr-sm-2" for="inlineFormCustomSelectPref">Category</label>
+                <select name="categoryName" class="custom-select mb-2 mr-sm-2 mb-sm-0" id="inlineFormCustomSelectPref">
+                  {% for category in categories %}
+                      <option value="{{category.name}}" {% if category.name == categoryName %}selected{%endif%}>{{category.name}}</option>
+                  </div>
+                  {% endfor %}
+              </select><br>
             {% endif %}
-            <button type="submit" class="btn btn-primary">Save</button>
+            <button type="submit" class="btn btn-primary btn-lg">Save</button>
             <a href="{{url_for('categoryDisplay',categoryName=categoryName)}}">Cancel</a>
           </form>
         </div>
