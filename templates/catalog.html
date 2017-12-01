@@ -28,7 +28,7 @@
         </div>
 
         <div class="col-lg-8 col-xs-12">
-          <h2>Latest Items</h2>
+          <h2>Latest Items</h2><a class="btn btn-primary btn-sm" href="{{url_for('newCategoryItem',categoryName='default')}}" role="button">New Item</a><br>
           {% for item in items %}
           <a href="{{url_for('categoryItem',categoryName=item.category.name,itemName=item.name)}}">{{item.name}} ({{item.category.name}})</a><br>
           {% endfor %}

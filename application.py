@@ -134,7 +134,6 @@ def categoryDisplay(categoryName):
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     cat = showCategory(categoryName)
-    items = showItems(cat.id,None)
     if request.method == 'POST':
         try:
             name = request.form["name"]
