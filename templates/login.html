@@ -14,16 +14,6 @@
   src="https://code.jquery.com/jquery-3.2.1.min.js"
   integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
   crossorigin="anonymous"></script>
-    <script>
-      var auth2;
-      gapi.load('auth2', function() {
-        auth2 = gapi.auth2.init({
-          client_id: "{{client_id}}",
-          // Scopes to request in addition to 'profile' and 'email'
-          //scope: 'additional_scope'
-        });
-      });
-    </script>
   </head>
   <body>
     <div class="container">
@@ -32,7 +22,18 @@
       </nav>
       <div class="jumbotron">
         <h1 class="display-4">Login</h1>
-        <button  class="g-signin2" id="signinButton">Sign in with Google</button>
+        <div id="signinButton">
+          <span class="g-signin"
+            data-scope="openid email"
+            data-clientid="{{client_id}}"
+            data-redirecturi="postmessage"
+            data-accesstype="offline"
+            data-cookiepolicy="single_host_origin"
+            data-callback="signInCallback"
+            data-approvalprompt="force">
+          </span>
+        </div>
+
         <div id="result"></div>
 
         <a href='#' onclick="signOut();">Sign Out from Google <a/>
@@ -42,11 +43,6 @@
                   console.log('User signed out.');
               });
           }
-        </script>
-        <script>
-          $('#signinButton').click(function() {
-            auth2.grantOfflineAccess({'redirect_uri': 'postmessage'}).then(signInCallback);
-          });
         </script>
       </div>
       <!--NEW GOOGLE SIGN IN CODE -->
@@ -66,7 +62,7 @@
             url: '/oauth/google',
             processData: false,
             data: authResult['code'],
-            contentType: 'application/octet-stream; charset=utf-8',
+            contentType: 'application/json',
             success: function(result) {
               // Handle or verify the server response if necessary.
               if (result) {
