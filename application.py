@@ -24,7 +24,8 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
-CLIENT_ID = 'AIzaSyDfqEBD8sEoAqyds29sgx8f3p1qrs2fS4g'
+CLIENT_ID = json.loads(
+   open('client_secret.json', 'r').read())['web']['client_id']
 
 
 # CRUD Functionality
