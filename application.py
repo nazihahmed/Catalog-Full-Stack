@@ -3,7 +3,7 @@ from flask import Flask, jsonify, request, url_for, abort, g, render_template,re
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine,desc
-from flask.ext.httpauth import HTTPBasicAuth
+from flask_httpauth import HTTPBasicAuth
 import json
 import random, string
 
@@ -24,8 +24,8 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
-CLIENT_ID = json.loads(
-   open('client_secret.json', 'r').read())['web']['client_id']
+CLIENT_ID = '149573992398-133jfmfajp34d20ea65dj31phur2onbb.apps.googleusercontent.com'# json.loads(
+   # open('client_secret.json', 'r').read())['web']['client_id']
 
 
 # CRUD Functionality
@@ -307,6 +307,10 @@ def login(provider):
 def get_auth_token():
     token = g.user.generate_auth_token()
     return jsonify({'token': token.decode('ascii')})
+
+@app.route('/login')
+def loginPage():
+    return render_template('login.html')
 
 
 
