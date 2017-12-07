@@ -126,6 +126,7 @@ def categoryDisplay(categoryName):
         flash(u'Error retreiving category','danger')
         return redirect(url_for('default'))
 
+@auth.login_required
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     if request.method == 'POST':
@@ -154,6 +155,7 @@ def newCategoryItem(categoryName):
     else:
         return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
+@auth.login_required
 @app.route('/catalog/new', methods = ['GET','POST'])
 def newCategory():
     if request.method == 'POST':
@@ -180,6 +182,7 @@ def categoryItem(categoryName,itemName):
     it = showItem(categoryName,itemName)
     return render_template('category_item.html',item=it)
 
+@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
 #@auth.login_required
 def categoryItemEdit(categoryName,itemName):
@@ -197,12 +200,14 @@ def categoryItemEdit(categoryName,itemName):
     else:
         return render_template('category_item_edit.html',item=it,categories=showCategories())
 
+@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/delete')
 #@auth.login_required
 def categoryItemDelete(categoryName,itemName):
         it = showItem(categoryName,itemName)
         return render_template('category_item_delete.html',item=it)
-
+        
+@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
 #@auth.login_required
 def categoryItemDeleteConfirm(categoryName,itemName):
@@ -226,7 +231,7 @@ def login(provider):
         #STEP 2 - Exchange for a token
         try:
             # Upgrade the authorization code into a credentials object
-            oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
+            oauth_flow = flow_from_clientsecrets('client_secret.json', scope='')
             oauth_flow.redirect_uri = 'postmessage'
             credentials = oauth_flow.step2_exchange(auth_code)
         except FlowExchangeError:
@@ -310,7 +315,7 @@ def get_auth_token():
 
 @app.route('/login')
 def loginPage():
-    return render_template('login.html')
+    return render_template('login.html',client_id=CLIENT_ID)
 
 
 
