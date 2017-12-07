@@ -24,20 +24,7 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
-# categories = session.query(Category).all()
-# session.delete(categories)
-# session.commit()
-# # Menu for UrbanBurger
-# category1 = Category(name="Basketball")
-# #
-# session.add(category1)
-# session.commit()
-# #
-# item1 = Item(name="Veggie Burger", description="Juicy grilled veggie patty with tomato mayo and lettuce", category=category1)
-# session.add(item1)
-# session.commit()
-#CLIENT_ID = json.loads(
-#    open('client_secrets.json', 'r').read())['web']['client_id']
+CLIENT_ID = 'AIzaSyDfqEBD8sEoAqyds29sgx8f3p1qrs2fS4g'
 
 
 # CRUD Functionality
@@ -141,28 +128,28 @@ def categoryDisplay(categoryName):
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     if request.method == 'POST':
-        # try:
-        name = request.form["name"]
-        description = request.form["description"]
-        print categoryName
-        if 'categoryName' in request.form:
-            catName = request.form["categoryName"]
-        else:
-            catName = categoryName
-        print catName
-        if name and description and catName:
-        # Success flash
-            newItem(name,description,catName)
-            flash(u'Success! item Created successfuly','success')
-            return redirect(url_for('categoryDisplay',categoryName=catName))
-        else:
+        try:
+            name = request.form["name"]
+            description = request.form["description"]
+            print categoryName
+            if 'categoryName' in request.form:
+                catName = request.form["categoryName"]
+            else:
+                catName = categoryName
+            print catName
+            if name and description and catName:
+            # Success flash
+                newItem(name,description,catName)
+                flash(u'Success! item Created successfuly','success')
+                return redirect(url_for('categoryDisplay',categoryName=catName))
+            else:
+                # Failed flash
+                flash(u'Error One of the fields is empty, please try again!','danger')
+                return redirect(url_for('newCategoryItem',categoryName=catName))
+        except:
             # Failed flash
-            flash(u'Error One of the fields is empty, please try again!','danger')
-            return redirect(url_for('newCategoryItem',categoryName=catName))
-        # except:
-        #     # Failed flash
-        #     flash('Server Error, please try again later','danger')
-        #     return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            flash('Server Error, please try again later','danger')
+            return redirect(url_for('categoryDisplay',categoryName=categoryName))
     else:
         return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
