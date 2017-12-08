@@ -90,6 +90,21 @@ def deleteItem(item):
     except:
         return False
 
+def isLoggedIn():
+    return 'username' in login_session
+
+def getUserID(id):
+    user = session.query(User).filter_by(id=id).first()
+    return user
+
+def createUser(user):
+    try:
+        new_user = User(username=user.username,picture=user.picture,email=user.email)
+        session.add(new_user)
+        session.commit()
+        return new_user
+    except:
+        return False
 
 @auth.verify_password
 def verify_password(username_or_token, password):
@@ -124,9 +139,12 @@ def categoryDisplay(categoryName):
         flash(u'Error retreiving category','danger')
         return redirect(url_for('default'))
 
-@auth.login_required
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
+    if not isLoggedIn():
+        return redirect('/login')
+    if not isLoggedIn():
+        return redirect('/login')
     if request.method == 'POST':
         try:
             name = request.form["name"]
@@ -156,6 +174,8 @@ def newCategoryItem(categoryName):
 @auth.login_required
 @app.route('/catalog/new', methods = ['GET','POST'])
 def newCategory():
+    if not isLoggedIn():
+        return redirect('/login')
     if request.method == 'POST':
         try:
             name = request.form["name"]
@@ -180,10 +200,13 @@ def categoryItem(categoryName,itemName):
     it = showItem(categoryName,itemName)
     return render_template('category_item.html',item=it)
 
-@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
 #@auth.login_required
 def categoryItemEdit(categoryName,itemName):
+    if not isLoggedIn():
+        return redirect('/login')
+    creator_id = showItem(categoryName,itemName).user_id
+    if login_session['user_id'] != creator_id
     it = showItem(categoryName,itemName)
     if request.method == 'POST':
         try:
@@ -198,14 +221,14 @@ def categoryItemEdit(categoryName,itemName):
     else:
         return render_template('category_item_edit.html',item=it,categories=showCategories())
 
-@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/delete')
 #@auth.login_required
 def categoryItemDelete(categoryName,itemName):
-        it = showItem(categoryName,itemName)
-        return render_template('category_item_delete.html',item=it)
+    if not isLoggedIn():
+        return redirect('/login')
+    it = showItem(categoryName,itemName)
+    return render_template('category_item_delete.html',item=it)
 
-@auth.login_required
 @app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
 #@auth.login_required
 def categoryItemDeleteConfirm(categoryName,itemName):
@@ -247,6 +270,36 @@ def new_user():
     session.add(user)
     session.commit()
     return jsonify({ 'username': user.username }), 201#, {'Location': url_for('get_user', id = user.id, _external = True)}
+
+@app.route('/oauth/logout')
+def oauthDisconnect():
+    access_token = login_session.get('access_token')
+    if access_token is None:
+        print 'Access Token is None'
+        response = make_response(json.dumps('Current user not connected.'), 401)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    print 'In gdisconnect access token is %s', access_token
+    print 'User name is: '
+    print login_session['username']
+    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    h = httplib2.Http()
+    result = h.request(url, 'GET')[0]
+    print 'result is '
+    print result
+    if result['status'] == '200':
+        del login_session['access_token']
+        del login_session['gplus_id']
+        del login_session['username']
+        del login_session['email']
+        del login_session['picture']
+        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response.headers['Content-Type'] = 'application/json'
+        return response
+    else:
+        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response.headers['Content-Type'] = 'application/json'
+        return response
 
 @app.route('/oauth/<provider>', methods=['POST'])
 def oauthConnect(provider):
@@ -328,6 +381,10 @@ def oauthConnect(provider):
         output += '<img src="'
         output += login_session['picture']
         output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+        user_id = getUserID(login_session['email'])
+        if not user_id:
+            user_id = createUser(login_session)
+        login_session['user_id'] = user_id
         flash("you are now logged in as %s" % login_session['username'])
         print "done!"
         return output

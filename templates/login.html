@@ -36,14 +36,7 @@
 
         <div id="result"></div>
 
-        <a href='#' onclick="signOut();">Sign Out from Google <a/>
-        <script>
-          function signOut() {
-              auth2.signOut().then(function() {
-                  console.log('User signed out.');
-              });
-          }
-        </script>
+        <a href='{{url_for('oauthDisconnect')}}'>Sign Out from Google <a/>
       </div>
       <!--NEW GOOGLE SIGN IN CODE -->
       <script>
