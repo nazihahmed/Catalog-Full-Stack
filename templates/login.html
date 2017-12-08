@@ -59,10 +59,10 @@
           // Send the code to the server
           $.ajax({
             type: 'POST',
-            url: '/oauth/google',
+            url: '/oauth/google?state={{STATE}}',
             processData: false,
             data: authResult['code'],
-            contentType: 'application/json',
+            contentType: 'application/octet-stream; charset=utf-8',
             success: function(result) {
               // Handle or verify the server response if necessary.
               if (result) {

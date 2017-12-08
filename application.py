@@ -227,7 +227,7 @@ def showLogin():
                     for x in xrange(32))
     login_session['state'] = state
     # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state)
+    return render_template('login.html', STATE=state,client_id=CLIENT_ID)
 
 @app.route('/users', methods = ['POST'])
 def new_user():
@@ -249,7 +249,7 @@ def new_user():
     return jsonify({ 'username': user.username }), 201#, {'Location': url_for('get_user', id = user.id, _external = True)}
 
 @app.route('/oauth/<provider>', methods=['POST'])
-def gconnect(provider):
+def oauthConnect(provider):
     if provider == 'google':
         # Validate state token
         if request.args.get('state') != login_session['state']:
