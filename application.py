@@ -123,7 +123,7 @@ def default():
     items = showItems(None,10)
     return render_template('catalog.html',categories = categories, items=items)
 
-@app.route('/catalog/<categoryName>')
+@app.route('/category/<categoryName>')
 def categoryDisplay(categoryName):
     if categoryName!='default':
         cat = showCategory(categoryName)
@@ -150,7 +150,7 @@ def category_item_json(category):
         category_id=category_selected.id).all()
     return jsonify(Category=[item.serialize for item in items])
 
-@app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
+@app.route('/category/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     if not isLoggedIn():
         flash('login is required to create a new item','warning')
@@ -181,7 +181,7 @@ def newCategoryItem(categoryName):
     else:
         return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
-@app.route('/catalog/new', methods = ['GET','POST'])
+@app.route('/category/new', methods = ['GET','POST'])
 def newCategory():
     if not isLoggedIn():
         flash('login is required to create a new category','warning')
@@ -205,12 +205,12 @@ def newCategory():
     else:
         return render_template('new_category.html')
 
-@app.route('/catalog/<categoryName>/<itemName>')
+@app.route('/category/<categoryName>/<itemName>')
 def categoryItem(categoryName,itemName):
     it = showItem(categoryName,itemName)
     return render_template('category_item.html',item=it)
 
-@app.route('/catalog/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
+@app.route('/category/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
 #@auth.login_required
 def categoryItemEdit(categoryName,itemName):
     if not isLoggedIn():
@@ -233,7 +233,7 @@ def categoryItemEdit(categoryName,itemName):
     else:
         return render_template('category_item_edit.html',item=itm,categories=showCategories())
 
-@app.route('/catalog/<categoryName>/<itemName>/delete')
+@app.route('/category/<categoryName>/<itemName>/delete')
 def categoryItemDelete(categoryName,itemName):
     if not isLoggedIn():
         flash('login is required to delete this item','warning')
@@ -245,7 +245,7 @@ def categoryItemDelete(categoryName,itemName):
     it = showItem(categoryName,itemName)
     return render_template('category_item_delete.html',item=it)
 
-@app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
+@app.route('/category/<categoryName>/<itemName>/deleteConfirm')
 def categoryItemDeleteConfirm(categoryName,itemName):
     if not isLoggedIn():
         flash('login is required to delete this item','warning')
