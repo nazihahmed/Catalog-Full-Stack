@@ -15,7 +15,11 @@
         <a class="navbar-brand" href="/">Catalog App</a>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <a class="nav-link" href="{{url_for('showLogin')}}">Login</a>
+            {% if not session.logged_in %}
+              <a class="nav-link" href="{{url_for('showLogin')}}">Login</a>
+            {% else %}
+              <a class="nav-link" href="{{url_for('oauthDisconnect')}}">Logout</a>
+            {% endif %}
           </li>
         </ul>
       </nav>
@@ -33,14 +37,14 @@
         {% endwith %}
       <div class="row jumbotron">
         <div class="col-lg-4 col-xs-12 categories">
-          <h2>Categories</h2><a class="btn btn-primary btn-sm" href="{{url_for('newCategory')}}" role="button">New Category</a><br>
+          <h2>Categories</h2>{% if session.logged_in %}<a class="btn btn-primary btn-sm" href="{{url_for('newCategory')}}" role="button">New Category</a><br>{% endif %}
           {% for category in categories %}
           <a href="{{url_for('categoryDisplay',categoryName=category.name)}}">{{category.name}}</a><br>
           {% endfor %}
         </div>
 
         <div class="col-lg-8 col-xs-12">
-          <h2>Latest Items</h2><a class="btn btn-primary btn-sm" href="{{url_for('newCategoryItem',categoryName='default')}}" role="button">New Item</a><br>
+          <h2>Latest Items</h2>{% if session.logged_in %}<a class="btn btn-primary btn-sm" href="{{url_for('newCategoryItem',categoryName='default')}}" role="button">New Item</a><br>{% endif %}
           {% for item in items %}
           <a href="{{url_for('categoryItem',categoryName=item.category.name,itemName=item.name)}}">{{item.name}} ({{item.category.name}})</a><br>
           {% endfor %}

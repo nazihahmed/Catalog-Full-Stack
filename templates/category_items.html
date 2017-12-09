@@ -15,7 +15,11 @@
         <a class="navbar-brand" href="/">Catalog App</a>
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
-            <a class="nav-link" href="{{url_for('showLogin')}}">Login</a>
+            {% if not session.logged_in %}
+              <a class="nav-link" href="{{url_for('showLogin')}}">Login</a>
+            {% else %}
+              <a class="nav-link" href="{{url_for('oauthDisconnect')}}">Logout</a>
+            {% endif %}
           </li>
         </ul>
       </nav>
@@ -33,7 +37,9 @@
           {% endif %}
         {% endwith %}
         <h1 class="display-4">{{category.name}}</h1>
+        {% if session.logged_in %}
         <a class="btn btn-primary btn-lg" href="{{url_for('newCategoryItem',categoryName=category.name)}}" role="button">New Item</a>
+        {% endif %}
       </div>
       {% for item in items %}
       <div class="jumbotron">
@@ -41,10 +47,12 @@
         <p class="lead"></p>
         <hr class="my-4">
         <p>{{item.description}}</p>
+        {% if session.logged_in %}
         <p class="lead">
           <a class="btn btn-primary btn-lg" href="{{url_for('categoryItemEdit',categoryName=item.category.name,itemName=item.name)}}" role="button">Edit</a>
           <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemDelete',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
         </p>
+        {% endif %}
       </div>
   	  {% endfor %}
     </div>

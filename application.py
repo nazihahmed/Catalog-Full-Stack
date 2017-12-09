@@ -93,13 +93,6 @@ def deleteItem(item):
 def isLoggedIn():
     return 'username' in login_session
 
-def getUserID(email):
-    try:
-        user = session.query(User).filter_by(email=email).first()
-        return user.id
-    except:
-        return False
-
 def getUserByEmail(email):
     try:
         user = session.query(User).filter_by(email=email).first()
@@ -119,22 +112,9 @@ def createUser(user):
         new_user = User(username=user.username,picture=user.picture,email=user.email)
         session.add(new_user)
         session.commit()
-        return new_user.id
+        return new_user
     except:
         return False
-
-@auth.verify_password
-def verify_password(username_or_token, password):
-    #Try to see if it's a token first
-    user_id = User.verify_auth_token(username_or_token)
-    if user_id:
-        user = session.query(User).filter_by(id = user_id).one()
-    else:
-        user = session.query(User).filter_by(username = username_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
-    g.user = user
-    return True
 
 @app.route('/')
 @app.route('/catalog')
@@ -165,12 +145,12 @@ def newCategoryItem(categoryName):
         try:
             name = request.form["name"]
             description = request.form["description"]
-            print categoryName
+            # print categoryName
             if 'categoryName' in request.form:
                 catName = request.form["categoryName"]
             else:
                 catName = categoryName
-            print catName
+            # print catName
             if name and description and catName:
             # Success flash
                 newItem(name,description,catName)
@@ -187,7 +167,6 @@ def newCategoryItem(categoryName):
     else:
         return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
 
-@auth.login_required
 @app.route('/catalog/new', methods = ['GET','POST'])
 def newCategory():
     if not isLoggedIn():
@@ -223,8 +202,8 @@ def categoryItemEdit(categoryName,itemName):
     if not isLoggedIn():
         flash('login is required to create a new category','warning')
         return redirect('/login')
-    creator = showItem(categoryName,itemName).user
-    if login_session['user_id'] != creator['id']:
+    itm = showItem(categoryName,itemName)
+    if login_session['user_id'] != itm.user_id:
         flash('you are not authorized to edit this item','danger')
         return redirect(url_for('categoryItem',categoryName=categoryName,itemName=itemName))
     if request.method == 'POST':
@@ -232,16 +211,15 @@ def categoryItemEdit(categoryName,itemName):
             it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
             # Success flash
             flash(u'Success!, item saved successfuly','success')
-            return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
+            return redirect(url_for('categoryItem',categoryName=itm.category.name,itemName=itm.name))
         except:
             # error flash
             flash(u'Error creating item, please try again later','danger')
-            return redirect(url_for('categoryItem',categoryName=it.category.name,itemName=it.name))
+            return redirect(url_for('categoryItem',categoryName=itm.category.name,itemName=itm.name))
     else:
-        return render_template('category_item_edit.html',item=it,categories=showCategories())
+        return render_template('category_item_edit.html',item=itm,categories=showCategories())
 
 @app.route('/catalog/<categoryName>/<itemName>/delete')
-#@auth.login_required
 def categoryItemDelete(categoryName,itemName):
     if not isLoggedIn():
         flash('login is required to create a new category','warning')
@@ -254,7 +232,6 @@ def categoryItemDelete(categoryName,itemName):
     return render_template('category_item_delete.html',item=it)
 
 @app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
-#@auth.login_required
 def categoryItemDeleteConfirm(categoryName,itemName):
     if not isLoggedIn():
         flash('login is required to create a new category','warning')
@@ -274,7 +251,6 @@ def categoryItemDeleteConfirm(categoryName,itemName):
             flash(u'Server Error, please try again later','danger')
             return redirect(url_for('categoryDisplay',categoryName=categoryName))
 
-# Create anti-forgery state token
 @app.route('/login')
 def showLogin():
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
@@ -283,47 +259,29 @@ def showLogin():
     # return "The current session state is %s" % login_session['state']
     return render_template('login.html', STATE=state,client_id=CLIENT_ID)
 
-@app.route('/users', methods = ['POST'])
-def new_user():
-    username = request.json.get('username')
-    password = request.json.get('password')
-    if username is None or password is None:
-        print "missing arguments"
-        abort(400)
-
-    if session.query(User).filter_by(username = username).first() is not None:
-        print "existing user"
-        user = session.query(User).filter_by(username=username).first()
-        return jsonify({'message':'user already exists'}), 200#, {'Location': url_for('get_user', id = user.id, _external = True)}
-
-    user = User(username = username)
-    user.hash_password(password)
-    session.add(user)
-    session.commit()
-    return jsonify({ 'username': user.username }), 201#, {'Location': url_for('get_user', id = user.id, _external = True)}
-
 @app.route('/oauth/logout')
 def oauthDisconnect():
     access_token = login_session.get('access_token')
     if access_token is None:
-        print 'Access Token is None'
+        print('Access Token is None')
         response = make_response(json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    print 'In gdisconnect access token is %s', access_token
-    print 'User name is: '
-    print login_session['username']
+    print('In gdisconnect access token is %s', access_token)
+    print('User name is: ')
+    print(login_session['username'])
     url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    print 'result is '
-    print result
+    print('result is ')
+    print(result)
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
         del login_session['picture']
+        del login_session['logged_in']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
@@ -413,10 +371,15 @@ def oauthConnect(provider):
         output += login_session['picture']
         output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
-        user_id = getUserID(login_session['email'])
-        if not user_id:
-            user_id = createUser(login_session)
-        login_session['user_id'] = user_id
+        user = session.query(User).filter_by(email=login_session['email']).first()
+        if not user:
+            user = User(username=login_session['username'],picture=login_session['picture'],email=login_session['email'])
+            session.add(user)
+            session.commit()
+
+        login_session['user_id'] = user.id
+        login_session['logged_in'] = True
+
         flash("you are now logged in as %s" % login_session['username'])
         print "done!"
         user = getUserByEmail(login_session['email'])
@@ -425,105 +388,12 @@ def oauthConnect(provider):
         return redirect(url_for('default'))
 
 
-# @app.route('/oauth/<provider>', methods = ['POST'])
-# def login(provider):
-#     #STEP 1 - Parse the auth code
-#     if provider == 'google':
-#         # Validate state token
-#         if request.args.get('state') != login_session['state']:
-#             response = make_response(json.dumps('Invalid state parameter.'), 401)
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#         # Obtain authorization code
-#         code = request.data
-#
-#         try:
-#             # Upgrade the authorization code into a credentials object
-#             oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
-#             oauth_flow.redirect_uri = 'postmessage'
-#             credentials = oauth_flow.step2_exchange(code)
-#         except FlowExchangeError:
-#             response = make_response(
-#                 json.dumps('Failed to upgrade the authorization code.'), 401)
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#
-#         # Check that the access token is valid.
-#         access_token = credentials.access_token
-#         url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
-#                % access_token)
-#         h = httplib2.Http()
-#         result = json.loads(h.request(url, 'GET')[1])
-#         # If there was an error in the access token info, abort.
-#         if result.get('error') is not None:
-#             response = make_response(json.dumps(result.get('error')), 500)
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#
-#         # Verify that the access token is used for the intended user.
-#         gplus_id = credentials.id_token['sub']
-#         if result['user_id'] != gplus_id:
-#             response = make_response(
-#                 json.dumps("Token's user ID doesn't match given user ID."), 401)
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#
-#         # Verify that the access token is valid for this app.
-#         if result['issued_to'] != CLIENT_ID:
-#             response = make_response(
-#                 json.dumps("Token's client ID does not match app's."), 401)
-#             print "Token's client ID does not match app's."
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#
-#         stored_access_token = login_session.get('access_token')
-#         stored_gplus_id = login_session.get('gplus_id')
-#         if stored_access_token is not None and gplus_id == stored_gplus_id:
-#             response = make_response(json.dumps('Current user is already connected.'),
-#                                      200)
-#             response.headers['Content-Type'] = 'application/json'
-#             return response
-#
-#         # Store the access token in the session for later use.
-#         login_session['access_token'] = credentials.access_token
-#         login_session['gplus_id'] = gplus_id
-#
-#         # Get user info
-#         userinfo_url = "https://www.googleapis.com/oauth2/v1/userinfo"
-#         params = {'access_token': credentials.access_token, 'alt': 'json'}
-#         answer = requests.get(userinfo_url, params=params)
-#         print answer
-#         data = answer.json()
-#         login_session['username'] = data['name']
-#         login_session['picture'] = data['picture']
-#         login_session['email'] = data['email']
-#         user_id = getUserID(login_session['email'])
-#         if not user_id:
-#             user_id = createUser(login_session)
-#         login_session['user_id'] = user_id
-#         flash("you are now logged in as %s" % login_session['username'])
-#
-#         #STEP 4 - Make token
-#         token = user.generate_auth_token(600)
-#
-#         #STEP 5 - Send back token to the client
-#         return jsonify({'token': token.decode('ascii')})
-#
-#         #return jsonify({'token': token.decode('ascii'), 'duration': 600})
-#     else:
-#         return 'Unrecoginized Provider'
-
 @app.route('/api/users/<int:id>')
 def get_user(id):
     user = session.query(User).filter_by(id=id).one()
     if not user:
         abort(400)
     return jsonify({'username': user.username})
-
-@app.route('/api/resource')
-@auth.login_required
-def get_resource():
-    return jsonify({ 'data': 'Hello, %s!' % g.user.username })
 
 if __name__ == '__main__':
     app.debug = True
