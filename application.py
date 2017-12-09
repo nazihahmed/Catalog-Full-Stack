@@ -117,7 +117,7 @@ def createUser(user):
         return False
 
 @app.route('/')
-@app.route('/catalog')
+@app.route('/category')
 def default():
     categories = showCategories()
     items = showItems(None,10)
@@ -143,12 +143,20 @@ def category_json():
     return jsonify(Categories=[category.serialize for category in categories])
 
 @app.route('/category/<string:category>/json')
-def category_item_json(category):
+def category_items_json(category):
     '''Return a json of items in a category'''
     category_selected = session.query(Category).filter_by(name=category).one()
     items = session.query(Item).filter_by(
         category_id=category_selected.id).all()
     return jsonify(Category=[item.serialize for item in items])
+
+@app.route('/category/<category>/<item>/json')
+def category_item_json(category,item):
+    '''Return a json of item in a category'''
+    category_selected = session.query(Category).filter_by(name=category).one()
+    item = session.query(Item).filter_by(
+        category_id=category_selected.id).first()
+    return jsonify(Item=item.serialize)
 
 @app.route('/category/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
@@ -404,7 +412,7 @@ def oauthConnect(provider):
         return redirect(url_for('default'))
 
 
-@app.route('/api/users/<int:id>')
+@app.route('/users/<int:id>')
 def get_user(id):
     user = session.query(User).filter_by(id=id).one()
     if not user:

@@ -57,7 +57,8 @@ class Category(Base):
         """Return object data in easily serializeable format"""
         return {
                 'id' : self.id,
-                'name' : self.name
+                'name' : self.name,
+                'user_id': self.user_id
             }
 
 
@@ -78,6 +79,8 @@ class Item(Base):
         return {
             'name': self.name,
             'description': self.description,
+            'category_id': self.category_id,
+            'user_id': self.user_id,
             'id': self.id
         }
 
