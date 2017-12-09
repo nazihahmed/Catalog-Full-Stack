@@ -19,14 +19,14 @@ class User(Base):
     username = Column(String(32))
     picture = Column(String)
     email = Column(String,index=True)
-    password_hash=Column(String(64))
+    # password_hash=Column(String(64))
     # password_hash = Column(String(64))
 
-    def hash_password(self, password):
-        self.password_hash = pwd_context.encrypt(password)
-
-    def verify_password(self, password):
-        return pwd_context.verify(password, self.password_hash)
+    # def hash_password(self, password):
+    #     self.password_hash = pwd_context.encrypt(password)
+    #
+    # def verify_password(self, password):
+    #     return pwd_context.verify(password, self.password_hash)
     #Add a method to generate auth tokens here
     def generate_auth_token(self, expiration=600):
         s = Serializer(secret_key, expires_in = expiration)
