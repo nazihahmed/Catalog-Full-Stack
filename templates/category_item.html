@@ -40,11 +40,11 @@
           <p class="lead">Category: <a href="{{url_for('categoryDisplay',categoryName=item.category.name)}}">{{item.category.name}}</a></p>
           <hr class="my-4">
           <p>{{item.description}}</p>
-          {% if session.logged_in %}
-          <p class="lead">
-            <a class="btn btn-primary btn-lg" href="{{url_for('categoryItemEdit',categoryName=item.category.name,itemName=item.name)}}" role="button">Edit</a>
-            <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemDelete',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
-          </p>
+          {% if session.logged_in and session.user_id == item.user_id %}
+            <p class="lead">
+              <a class="btn btn-primary btn-lg" href="{{url_for('categoryItemEdit',categoryName=item.category.name,itemName=item.name)}}" role="button">Edit</a>
+              <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemDelete',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
+            </p>
           {% endif %}
         </div>
       </div>

@@ -37,7 +37,7 @@
           {% endif %}
         {% endwith %}
         <h1 class="display-4">{{category.name}}</h1>
-        {% if session.logged_in %}
+        {% if session.logged_in and session.user_id == category.user_id %}
         <a class="btn btn-primary btn-lg" href="{{url_for('newCategoryItem',categoryName=category.name)}}" role="button">New Item</a>
         {% endif %}
       </div>
@@ -47,7 +47,7 @@
         <p class="lead"></p>
         <hr class="my-4">
         <p>{{item.description}}</p>
-        {% if session.logged_in %}
+        {% if session.logged_in and session.user_id == item.user_id %}
         <p class="lead">
           <a class="btn btn-primary btn-lg" href="{{url_for('categoryItemEdit',categoryName=item.category.name,itemName=item.name)}}" role="button">Edit</a>
           <a class="btn btn-danger btn-lg" href="{{url_for('categoryItemDelete',categoryName=item.category.name,itemName=item.name)}}" role="button">Delete</a>
