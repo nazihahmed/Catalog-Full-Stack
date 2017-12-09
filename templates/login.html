@@ -22,7 +22,7 @@
         <ul class="navbar-nav ml-auto">
           <li class="nav-item">
             {% if session.logged_in %}
-              <a class="nav-link" href="{{url_for('oauthDisconnect')}}">Logout</a>
+              Welcome,{{session.username}} <a class="nav-link" href="{{url_for('oauthDisconnect')}}">Logout</a>
             {% endif %}
           </li>
         </ul>
