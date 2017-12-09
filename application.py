@@ -200,7 +200,7 @@ def categoryItem(categoryName,itemName):
 #@auth.login_required
 def categoryItemEdit(categoryName,itemName):
     if not isLoggedIn():
-        flash('login is required to create a new category','warning')
+        flash('login is required to edit this item','warning')
         return redirect('/login')
     itm = showItem(categoryName,itemName)
     if login_session['user_id'] != itm.user_id:
@@ -222,7 +222,7 @@ def categoryItemEdit(categoryName,itemName):
 @app.route('/catalog/<categoryName>/<itemName>/delete')
 def categoryItemDelete(categoryName,itemName):
     if not isLoggedIn():
-        flash('login is required to create a new category','warning')
+        flash('login is required to delete this item','warning')
         return redirect('/login')
     creator = showItem(categoryName,itemName).user
     if login_session['user_id'] != creator.id:
@@ -234,7 +234,7 @@ def categoryItemDelete(categoryName,itemName):
 @app.route('/catalog/<categoryName>/<itemName>/deleteConfirm')
 def categoryItemDeleteConfirm(categoryName,itemName):
     if not isLoggedIn():
-        flash('login is required to create a new category','warning')
+        flash('login is required to delete this item','warning')
         return redirect('/login')
     creator = showItem(categoryName,itemName).user
     if login_session['user_id'] != creator.id:
@@ -284,11 +284,13 @@ def oauthDisconnect():
         del login_session['logged_in']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash('Successfully disconnected.','success')
+        return redirect(url_for('default'))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
-        return response
+        flash('Failed to revoke token for given user.','danger')
+        return redirect(url_for('default'))
 
 @app.route('/oauth/<provider>', methods=['POST'])
 def oauthConnect(provider):
