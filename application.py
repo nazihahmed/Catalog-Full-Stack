@@ -300,6 +300,9 @@ def categoryItemDeleteConfirm(categoryName, itemName):
 
 @app.route('/login')
 def showLogin():
+    if isLoggedIn():
+        flash('already logged in !', 'warning')
+        return redirect(url_for('default'))
     state = ''.join(random.choice(string.ascii_uppercase + string.digits)
                     for x in xrange(32))
     login_session['state'] = state
