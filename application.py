@@ -1,13 +1,14 @@
-from models import Base, User,Category,Item
-from flask import Flask, jsonify, request, url_for, abort, g, render_template,redirect,flash
+from models import Base, User, Category, Item
+from flask import Flask, jsonify, request, url_for, abort, g, render_template, redirect, flash
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy import create_engine,desc
+from sqlalchemy import create_engine, desc
 from flask_httpauth import HTTPBasicAuth
 import json
-import random, string
+import random
+import string
 
-#NEW IMPORTS
+# NEW IMPORTS
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
 import httplib2
@@ -33,44 +34,51 @@ CLIENT_ID = json.loads(open('client_secrets.json', 'r').read())['web']['client_i
 def showCategories():
     return session.query(Category).all()
 
+
 def showCategory(name):
     category = session.query(Category).filter_by(name=name).first()
     return category
 
+
 def addCategory(name):
     try:
-        new_category = Category(name=name,user=getCurrentUser())
+        new_category = Category(name=name, user=getCurrentUser())
         session.add(new_category)
         session.commit()
         return True
     except:
         return False
 
-def showItems(category_id,limit):
+
+def showItems(category_id, limit):
     if category_id:
-        items = session.query(Item).order_by(desc(Item.id)).filter_by(category_id = category_id).all()
+        items = session.query(Item).order_by(desc(Item.id)).filter_by(category_id=category_id).all()
     elif limit:
         items = session.query(Item).order_by(desc(Item.id)).limit(limit)
     else:
         items = session.query(Item).order_by(desc(Item.id)).all()
     return items
 
-def showItem(categoryName,itemName):
+
+def showItem(categoryName, itemName):
     category_id = showCategory(categoryName).id
-    item = session.query(Item).filter_by(name=itemName,category_id=category_id).first()
+    item = session.query(Item).filter_by(name=itemName, category_id=category_id).first()
     return item
 
-def newItem(name,description,categoryName):
+
+def newItem(name, description, categoryName):
     try:
         category = showCategory(categoryName)
-        new_item = Item(name=name,description=description,category=category,user=getCurrentUser())
+        new_item = Item(name=name, description=description,
+                        category=category, user=getCurrentUser())
         session.add(new_item)
         session.commit()
         return True
     except:
         return False
 
-def editItem(item,name,description,categoryName):
+
+def editItem(item, name, description, categoryName):
     try:
         item.name = name
         item.description = description
@@ -82,6 +90,7 @@ def editItem(item,name,description,categoryName):
     except:
         return False
 
+
 def deleteItem(item):
     try:
         session.delete(item)
@@ -90,8 +99,10 @@ def deleteItem(item):
     except:
         return False
 
+
 def isLoggedIn():
     return 'username' in login_session
+
 
 def getUserByEmail(email):
     try:
@@ -100,6 +111,7 @@ def getUserByEmail(email):
     except:
         return False
 
+
 def getCurrentUser():
     try:
         user = session.query(User).filter_by(id=login_session['user_id']).first()
@@ -107,40 +119,45 @@ def getCurrentUser():
     except:
         return False
 
+
 def createUser(user):
     try:
-        new_user = User(username=user.username,picture=user.picture,email=user.email)
+        new_user = User(username=user.username, picture=user.picture, email=user.email)
         session.add(new_user)
         session.commit()
         return new_user
     except:
         return False
 
+
 @app.route('/')
 @app.route('/category')
 def default():
     categories = showCategories()
-    items = showItems(None,10)
-    return render_template('catalog.html',categories = categories, items=items)
+    items = showItems(None, 10)
+    return render_template('catalog.html', categories=categories, items=items)
+
 
 @app.route('/category/<categoryName>')
 def categoryDisplay(categoryName):
-    if categoryName!='default':
+    if categoryName != 'default':
         cat = showCategory(categoryName)
-        items = showItems(cat.id,None)
-        return render_template('category_items.html',items=items,category=cat)
-    elif categoryName=='default':
+        items = showItems(cat.id, None)
+        return render_template('category_items.html', items=items, category=cat)
+    elif categoryName == 'default':
         return redirect(url_for('default'))
     else:
-        ## error
-        flash(u'Error retreiving category','danger')
+        # error
+        flash(u'Error retreiving category', 'danger')
         return redirect(url_for('default'))
+
 
 @app.route('/category/json')
 def category_json():
     '''Returns a json of the categories'''
     categories = session.query(Category).all()
     return jsonify(Categories=[category.serialize for category in categories])
+
 
 @app.route('/category/<string:category>/json')
 def category_items_json(category):
@@ -150,18 +167,20 @@ def category_items_json(category):
         category_id=category_selected.id).all()
     return jsonify(Category=[item.serialize for item in items])
 
+
 @app.route('/category/<category>/<item>/json')
-def category_item_json(category,item):
+def category_item_json(category, item):
     '''Return a json of item in a category'''
     category_selected = session.query(Category).filter_by(name=category).one()
     item = session.query(Item).filter_by(
         category_id=category_selected.id).first()
     return jsonify(Item=item.serialize)
 
-@app.route('/category/<categoryName>/new',methods = ['GET','POST'])
+
+@app.route('/category/<categoryName>/new', methods=['GET', 'POST'])
 def newCategoryItem(categoryName):
     if not isLoggedIn():
-        flash('login is required to create a new item','warning')
+        flash('login is required to create a new item', 'warning')
         return redirect('/login')
     if request.method == 'POST':
         try:
@@ -174,104 +193,110 @@ def newCategoryItem(categoryName):
                 catName = categoryName
             # print catName
             if name and description and catName:
-            # Success flash
-                newItem(name,description,catName)
-                flash(u'Success! item Created successfuly','success')
-                return redirect(url_for('categoryDisplay',categoryName=catName))
+                # Success flash
+                newItem(name, description, catName)
+                flash(u'Success! item Created successfuly', 'success')
+                return redirect(url_for('categoryDisplay', categoryName=catName))
             else:
                 # Failed flash
-                flash(u'Error One of the fields is empty, please try again!','danger')
-                return redirect(url_for('newCategoryItem',categoryName=catName))
+                flash(u'Error One of the fields is empty, please try again!', 'danger')
+                return redirect(url_for('newCategoryItem', categoryName=catName))
         except:
             # Failed flash
-            flash('Server Error, please try again later','danger')
-            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            flash('Server Error, please try again later', 'danger')
+            return redirect(url_for('categoryDisplay', categoryName=categoryName))
     else:
-        return render_template('category_item_new.html',categories=showCategories(),categoryName=categoryName)
+        return render_template('category_item_new.html', categories=showCategories(), categoryName=categoryName)
 
-@app.route('/category/new', methods = ['GET','POST'])
+
+@app.route('/category/new', methods=['GET', 'POST'])
 def newCategory():
     if not isLoggedIn():
-        flash('login is required to create a new category','warning')
+        flash('login is required to create a new category', 'warning')
         return redirect('/login')
     if request.method == 'POST':
         try:
             name = request.form["name"]
             if name:
                 # Success flash
-                flash(u'Success!, Category created successfuly','success')
+                flash(u'Success!, Category created successfuly', 'success')
                 addCategory(name)
                 return redirect(url_for('default'))
             else:
                 # Failed flash
-                flash(u'Error creating category, please try again later','danger')
+                flash(u'Error creating category, please try again later', 'danger')
                 return render_template('new_category.html')
         except:
             # Failed flash
-            flash(u'Server Error, please try again later','danger')
+            flash(u'Server Error, please try again later', 'danger')
             return render_template('new_category.html')
     else:
         return render_template('new_category.html')
 
-@app.route('/category/<categoryName>/<itemName>')
-def categoryItem(categoryName,itemName):
-    it = showItem(categoryName,itemName)
-    return render_template('category_item.html',item=it)
 
-@app.route('/category/<categoryName>/<itemName>/edit', methods = ['GET','POST'])
-#@auth.login_required
-def categoryItemEdit(categoryName,itemName):
+@app.route('/category/<categoryName>/<itemName>')
+def categoryItem(categoryName, itemName):
+    it = showItem(categoryName, itemName)
+    return render_template('category_item.html', item=it)
+
+
+@app.route('/category/<categoryName>/<itemName>/edit', methods=['GET', 'POST'])
+def categoryItemEdit(categoryName, itemName):
     if not isLoggedIn():
-        flash('login is required to edit this item','warning')
+        flash('login is required to edit this item', 'warning')
         return redirect('/login')
-    itm = showItem(categoryName,itemName)
+    itm = showItem(categoryName, itemName)
     if login_session['user_id'] != itm.user_id:
-        flash('you are not authorized to edit this item','danger')
-        return redirect(url_for('categoryItem',categoryName=categoryName,itemName=itemName))
+        flash('you are not authorized to edit this item', 'danger')
+        return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
     if request.method == 'POST':
         try:
-            it = editItem(it,request.form["name"],request.form["description"],request.form["categoryName"])
+            it = editItem(it, request.form["name"],
+                          request.form["description"], request.form["categoryName"])
             # Success flash
-            flash(u'Success!, item saved successfuly','success')
-            return redirect(url_for('categoryItem',categoryName=itm.category.name,itemName=itm.name))
+            flash(u'Success!, item saved successfuly', 'success')
+            return redirect(url_for('categoryItem', categoryName=itm.category.name, itemName=itm.name))
         except:
             # error flash
-            flash(u'Error creating item, please try again later','danger')
-            return redirect(url_for('categoryItem',categoryName=itm.category.name,itemName=itm.name))
+            flash(u'Error creating item, please try again later', 'danger')
+            return redirect(url_for('categoryItem', categoryName=itm.category.name, itemName=itm.name))
     else:
-        return render_template('category_item_edit.html',item=itm,categories=showCategories())
+        return render_template('category_item_edit.html', item=itm, categories=showCategories())
+
 
 @app.route('/category/<categoryName>/<itemName>/delete')
-def categoryItemDelete(categoryName,itemName):
+def categoryItemDelete(categoryName, itemName):
     if not isLoggedIn():
-        flash('login is required to delete this item','warning')
+        flash('login is required to delete this item', 'warning')
         return redirect('/login')
-    creator = showItem(categoryName,itemName).user
+    creator = showItem(categoryName, itemName).user
     if login_session['user_id'] != creator.id:
-        flash('you are not authorized to delete this item','danger')
-        return redirect(url_for('categoryItem',categoryName=categoryName,itemName=itemName))
-    it = showItem(categoryName,itemName)
-    return render_template('category_item_delete.html',item=it)
+        flash('you are not authorized to delete this item', 'danger')
+        return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
+    it = showItem(categoryName, itemName)
+    return render_template('category_item_delete.html', item=it)
+
 
 @app.route('/category/<categoryName>/<itemName>/deleteConfirm')
-def categoryItemDeleteConfirm(categoryName,itemName):
+def categoryItemDeleteConfirm(categoryName, itemName):
     if not isLoggedIn():
-        flash('login is required to delete this item','warning')
+        flash('login is required to delete this item', 'warning')
         return redirect('/login')
-    creator = showItem(categoryName,itemName).user
+    creator = showItem(categoryName, itemName).user
     if login_session['user_id'] != creator.id:
-        flash('you are not authorized to edit this item','danger')
-        return redirect(url_for('categoryItem',categoryName=categoryName,itemName=itemName))
-        it = showItem(categoryName,itemName)
+        flash('you are not authorized to edit this item', 'danger')
+        return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
+        it = showItem(categoryName, itemName)
         try:
             it = deleteItem(it)
             # Success flash
-            flash(u'Success!, item deleted successfuly','success')
-            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            flash(u'Success!, item deleted successfuly', 'success')
+            return redirect(url_for('categoryDisplay', categoryName=categoryName))
         except:
             # error flash
-            flash(u'Server Error, please try again later','danger')
-            return redirect(url_for('categoryDisplay',categoryName=categoryName))
+            flash(u'Server Error, please try again later', 'danger')
+            return redirect(url_for('categoryDisplay', categoryName=categoryName))
+
 
 @app.route('/login')
 def showLogin():
@@ -279,7 +304,8 @@ def showLogin():
                     for x in xrange(32))
     login_session['state'] = state
     # return "The current session state is %s" % login_session['state']
-    return render_template('login.html', STATE=state,client_id=CLIENT_ID)
+    return render_template('login.html', STATE=state, client_id=CLIENT_ID)
+
 
 @app.route('/oauth/logout')
 def oauthDisconnect():
@@ -306,13 +332,14 @@ def oauthDisconnect():
         del login_session['logged_in']
         response = make_response(json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
-        flash('Successfully disconnected.','success')
+        flash('Successfully disconnected.', 'success')
         return redirect(url_for('default'))
     else:
         response = make_response(json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
-        flash('Failed to revoke token for given user.','danger')
+        flash('Failed to revoke token for given user.', 'danger')
         return redirect(url_for('default'))
+
 
 @app.route('/oauth/<provider>', methods=['POST'])
 def oauthConnect(provider):
@@ -397,7 +424,8 @@ def oauthConnect(provider):
 
         user = session.query(User).filter_by(email=login_session['email']).first()
         if not user:
-            user = User(username=login_session['username'],picture=login_session['picture'],email=login_session['email'])
+            user = User(username=login_session['username'],
+                        picture=login_session['picture'], email=login_session['email'])
             session.add(user)
             session.commit()
 
@@ -419,7 +447,9 @@ def get_user(id):
         abort(400)
     return jsonify({'username': user.username})
 
+
 if __name__ == '__main__':
     app.debug = True
-    app.config['SECRET_KEY'] = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    app.config['SECRET_KEY'] = ''.join(random.choice(
+        string.ascii_uppercase + string.digits) for x in xrange(32))
     app.run(host='0.0.0.0', port=5000)
