@@ -136,6 +136,20 @@ def categoryDisplay(categoryName):
         flash(u'Error retreiving category','danger')
         return redirect(url_for('default'))
 
+@app.route('/category/json')
+def category_json():
+    '''Returns a json of the categories'''
+    categories = session.query(Category).all()
+    return jsonify(Categories=[category.serialize for category in categories])
+
+@app.route('/category/<string:category>/json')
+def category_item_json(category):
+    '''Return a json of items in a category'''
+    category_selected = session.query(Category).filter_by(name=category).one()
+    items = session.query(Item).filter_by(
+        category_id=category_selected.id).all()
+    return jsonify(Category=[item.serialize for item in items])
+
 @app.route('/catalog/<categoryName>/new',methods = ['GET','POST'])
 def newCategoryItem(categoryName):
     if not isLoggedIn():
