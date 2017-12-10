@@ -36,7 +36,7 @@ def showCategories():
 
 
 def showCategory(name):
-    category = session.query(Category).filter_by(name=name).first()
+    category = session.query(Category).filter_by(name=name).one_or_none()
     return category
 
 
@@ -62,7 +62,7 @@ def showItems(category_id, limit):
 
 def showItem(categoryName, itemName):
     category_id = showCategory(categoryName).id
-    item = session.query(Item).filter_by(name=itemName, category_id=category_id).first()
+    item = session.query(Item).filter_by(name=itemName, category_id=category_id).one_or_none()
     return item
 
 
@@ -106,7 +106,7 @@ def isLoggedIn():
 
 def getUserByEmail(email):
     try:
-        user = session.query(User).filter_by(email=email).first()
+        user = session.query(User).filter_by(email=email).one_or_none()
         return user
     except:
         return False
@@ -114,7 +114,7 @@ def getUserByEmail(email):
 
 def getCurrentUser():
     try:
-        user = session.query(User).filter_by(id=login_session['user_id']).first()
+        user = session.query(User).filter_by(id=login_session['user_id']).one_or_none()
         return user
     except:
         return False
@@ -162,7 +162,7 @@ def category_json():
 @app.route('/category/<string:category>/json')
 def category_items_json(category):
     '''Return a json of items in a category'''
-    category_selected = session.query(Category).filter_by(name=category).one()
+    category_selected = session.query(Category).filter_by(name=category).one_or_none()
     items = session.query(Item).filter_by(
         category_id=category_selected.id).all()
     return jsonify(Category=[item.serialize for item in items])
@@ -171,9 +171,9 @@ def category_items_json(category):
 @app.route('/category/<category>/<item>/json')
 def category_item_json(category, item):
     '''Return a json of item in a category'''
-    category_selected = session.query(Category).filter_by(name=category).one()
+    category_selected = session.query(Category).filter_by(name=category).one_or_none()
     item = session.query(Item).filter_by(
-        category_id=category_selected.id).first()
+        category_id=category_selected.id).one_or_none()
     return jsonify(Item=item.serialize)
 
 
@@ -425,7 +425,7 @@ def oauthConnect(provider):
         output += login_session['picture']
         output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
 
-        user = session.query(User).filter_by(email=login_session['email']).first()
+        user = session.query(User).filter_by(email=login_session['email']).one_or_none()
         if not user:
             user = User(username=login_session['username'],
                         picture=login_session['picture'], email=login_session['email'])
@@ -445,7 +445,7 @@ def oauthConnect(provider):
 
 @app.route('/users/<int:id>')
 def get_user(id):
-    user = session.query(User).filter_by(id=id).one()
+    user = session.query(User).filter_by(id=id).one_or_none()
     if not user:
         abort(400)
     return jsonify({'username': user.username})
