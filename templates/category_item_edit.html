@@ -39,7 +39,7 @@
               {% for category in categories %}
                   <option value="{{category.name}}" {% if category.name == categoryName %}selected{%endif%}>{{category.name}}</option>
               {% endfor %}
-            </select>
+            </select><br>
             <button type="submit" class="btn btn-primary">Save</button>
             <a href="{{url_for('categoryItem',categoryName=item.category.name,itemName=item.name)}}">Cancel</a>
           </form>
