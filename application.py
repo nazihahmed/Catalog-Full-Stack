@@ -251,14 +251,14 @@ def categoryItemEdit(categoryName, itemName):
         return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
     if request.method == 'POST':
         try:
-            it = editItem(it, request.form["name"],
+            itm = editItem(itm, request.form["name"],
                           request.form["description"], request.form["categoryName"])
             # Success flash
             flash(u'Success!, item saved successfuly', 'success')
             return redirect(url_for('categoryItem', categoryName=itm.category.name, itemName=itm.name))
         except:
             # error flash
-            flash(u'Error creating item, please try again later', 'danger')
+            flash(u'Error editing item, please try again later', 'danger')
             return redirect(url_for('categoryItem', categoryName=itm.category.name, itemName=itm.name))
     else:
         return render_template('category_item_edit.html', item=itm, categories=showCategories())
@@ -269,12 +269,12 @@ def categoryItemDelete(categoryName, itemName):
     if not isLoggedIn():
         flash('login is required to delete this item', 'warning')
         return redirect('/login')
-    creator = showItem(categoryName, itemName).user
+    itm = showItem(categoryName, itemName)
+    creator = itm.user
     if login_session['user_id'] != creator.id:
         flash('you are not authorized to delete this item', 'danger')
         return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
-    it = showItem(categoryName, itemName)
-    return render_template('category_item_delete.html', item=it)
+    return render_template('category_item_delete.html', item=itm)
 
 
 @app.route('/category/<categoryName>/<itemName>/deleteConfirm')
@@ -282,20 +282,20 @@ def categoryItemDeleteConfirm(categoryName, itemName):
     if not isLoggedIn():
         flash('login is required to delete this item', 'warning')
         return redirect('/login')
-    creator = showItem(categoryName, itemName).user
+    itm = showItem(categoryName, itemName)
+    creator = itm.user
     if login_session['user_id'] != creator.id:
         flash('you are not authorized to edit this item', 'danger')
         return redirect(url_for('categoryItem', categoryName=categoryName, itemName=itemName))
-        it = showItem(categoryName, itemName)
-        try:
-            it = deleteItem(it)
-            # Success flash
-            flash(u'Success!, item deleted successfuly', 'success')
-            return redirect(url_for('categoryDisplay', categoryName=categoryName))
-        except:
-            # error flash
-            flash(u'Server Error, please try again later', 'danger')
-            return redirect(url_for('categoryDisplay', categoryName=categoryName))
+    try:
+        deleteItem(itm)
+        # Success flash
+        flash(u'Success!, item deleted successfuly', 'success')
+        return redirect(url_for('categoryDisplay', categoryName=categoryName))
+    except:
+        # error flash
+        flash(u'Server Error, please try again later', 'danger')
+        return redirect(url_for('categoryDisplay', categoryName=categoryName))
 
 
 @app.route('/login')
