@@ -37,6 +37,3 @@ The final step will be to **cd** into your **/catalog** directory
 * [Python](http://www.dropwizard.io/1.0.2/docs/) - The backend
 * [Bootstrap](hhttps://getbootstrap.com/) - The UI(with HTML/CSS)
 
-## Acknowledgments
-
-* Some code was used from Udacity.
